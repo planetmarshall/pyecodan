@@ -31,6 +31,15 @@ class Client():
         async with self._session.post(url, headers=auth_header, json=state) as response:
             return await response.json()
 
+    async def device_update(self, device_id) -> Dict:
+        for location in await self._user_request("ListDevices"):
+            structure = location["Structure"]
+            device_state = [state["Device"] for state in structure["Devices"] if state["DeviceID"] == device_id]
+            if len(device_state) > 0:
+                return device_state[0]
+
+        raise ValueError(f"Device with id={device_id} not found")
+
     async def _user_request(self, endpoint) -> Dict:
         if self._context_key is None:
             await self.login()
