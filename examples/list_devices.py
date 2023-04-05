@@ -5,8 +5,13 @@ import pyecodan
 
 async def main():
     async with pyecodan.Client() as client:
-        devices = {device.name : device for device in await client.list_devices()}
-        print(devices)
+        devices = [device for device in await client.list_devices()]
+        device = devices[0]
+        print(device.name)
+
+        await device.update()
+        print(f"Flow Temperature: {device.flow_temperature}")
+
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()

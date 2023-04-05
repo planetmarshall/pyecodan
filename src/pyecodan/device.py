@@ -1,6 +1,8 @@
 from enum import IntFlag
 from typing import Dict
 
+from .device_properties import DeviceProperties
+
 
 class DeviceCommunicationError(Exception):
     def __init__(self, *args: object) -> None:
@@ -8,11 +10,8 @@ class DeviceCommunicationError(Exception):
 
 
 class EffectiveFlags(IntFlag):
+    Update = 0
     Power = 1
-
-
-class DeviceProperties:
-    Power = "Power"
 
 
 class Device:
@@ -25,15 +24,19 @@ class Device:
 
     @property
     def name(self):
-        return self._state["DeviceName"]
+        return self._state[DeviceProperties.DeviceName]
+
+    @property
+    def flow_temperature(self):
+        return self._device_properties[DeviceProperties.FlowTemperature]
 
     @property
     def _device_id(self):
-        return self._state["DeviceID"]
+        return self._state[DeviceProperties.DeviceID]
 
     @property
     def _building_id(self):
-        return self._state["BuildingID"]
+        return self._state[DeviceProperties.BuildingID]
 
     @property
     def _device_properties(self) -> Dict:
@@ -41,9 +44,9 @@ class Device:
 
     async def _request(self, effective_flags: EffectiveFlags, **kwargs) -> Dict:
         state = {
-            "BuildingID": self._building_id,
-            "DeviceID" : self._device_id,
-            "EffectiveFlags": effective_flags
+            DeviceProperties.BuildingID: self._building_id,
+            DeviceProperties.DeviceID: self._device_id,
+            DeviceProperties.EffectiveFlags: effective_flags
         }
         state.update(kwargs)
         return await self._client.device_request("SetAtw", state)
@@ -67,3 +70,10 @@ class Device:
             raise DeviceCommunicationError("Power could not be set")
 
         self._device_properties.update(response_state)
+
+    async def update(self) -> None:
+        """
+        Update all the state properties of the device
+        """
+        device_response = await self._client.device_update(device_id=self._device_id)
+        self._device_properties.update(device_response)
