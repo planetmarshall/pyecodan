@@ -12,7 +12,7 @@ class Client():
 
     base_url = "https://app.melcloud.com/Mitsubishi.Wifi.Client"
 
-    def __init__(self, username=os.getenv("ECODAN_USERNAME"), password=os.getenv("ECODAN_PASSWORD")):
+    def __init__(self, username=os.getenv("ECODAN_USERNAME"), password=os.getenv("ECODAN_PASSWORD"), context_key=None):
         """
         :param username: MELCloud username. Default is taken from the environment variable `ECODAN_USERNAME`
         :param password: MELCloud password. Default is taken from the environment variable `ECODAN_PASSWORD`
@@ -71,6 +71,13 @@ class Client():
             return [Device(self, device_state) for device_state in structure["Devices"]]
 
         return []
+
+    async def get_device(self, device_id) -> Device:
+        for location in await self._user_request("ListDevices"):
+            structure = location["Structure"]
+            for device in structure["Devices"]:
+                if device["DeviceName"] == device_id or device["DeviceID"] == device_id:
+                    return Device(self, device)
 
     async def __aenter__(self) -> "Client":
         return self

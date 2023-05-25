@@ -1,3 +1,4 @@
+import json
 from enum import IntFlag
 from typing import Dict
 
@@ -77,3 +78,6 @@ class Device:
         """
         device_response = await self._client.device_update(device_id=self._device_id)
         self._device_properties.update(device_response)
+
+    def __repr__(self):
+        return json.dumps(self._state, indent=2)
